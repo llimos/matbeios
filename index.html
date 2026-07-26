@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מטבעות התלמוד</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --plane:        #f9f9f7;
+    --surface-1:    #fcfcfb;
+    --text-primary: #0b0b0b;
+    --text-muted:   #898781;
+    --border:       rgba(11,11,11,0.10);
+    /* categorical slots — one hue per denomination */
+    --sela:    #2a78d6; /* blue    */
+    --shekel:  #eb6834; /* orange  */
+    --dinar:   #1baf7a; /* aqua    */
+    --maah:    #eda100; /* yellow  */
+    --pundyon: #e87ba4; /* magenta */
+    --issar:   #008300; /* green   */
+    --perutah: #4a3aa7; /* violet  */
+    /* the gap colour that "cuts" each bar into segments */
+    --divider: var(--surface-1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --plane:        #0d0d0d;
+      --surface-1:    #1a1a19;
+      --text-primary: #ffffff;
+      --text-muted:   #898781;
+      --border:       rgba(255,255,255,0.10);
+      --sela:    #3987e5;
+      --shekel:  #d95926;
+      --dinar:   #199e70;
+      --maah:    #c98500;
+      --pundyon: #d55181;
+      --issar:   #008300;
+      --perutah: #9085e9;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--plane);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", "Arial Hebrew", sans-serif;
+    line-height: 1.4;
+    padding: 2.5rem 1rem 3.5rem;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { margin-bottom: 2rem; }
+  h1 { font-size: 1.9rem; font-weight: 700; margin: 0 0 .35rem; }
+  .lead { color: var(--text-muted); font-size: 1rem; margin: 0; }
+
+  .rows {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem 1.5rem 1.75rem;
+  }
+
+  .row { margin-top: 1.5rem; }
+  .row:first-child { margin-top: 0; }
+
+  .row-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 .5rem;
+  }
+
+  .bar {
+    height: 46px;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    /* background is set per-row from JS */
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>מטבעות התלמוד</h1>
+      <p class="lead">כל פס שווה ערך לסלע אחד, מחולק למטבעות הקטנים ממנו</p>
+    </header>
+    <div class="rows" id="rows"></div>
+  </div>
+
+<script>
+  // Talmudic coin hierarchy. `n` = how many of this coin equal one sela.
+  // 1 sela = 2 shekel = 4 dinar = 24 ma'ah = 48 pundyon = 96 issar = 768 perutah.
+  const coins = [
+    { name: "סֶלַע",     n: 1,   color: "var(--sela)"    },
+    { name: "שֶׁקֶל",    n: 2,   color: "var(--shekel)"  },
+    { name: "דִּינָר",   n: 4,   color: "var(--dinar)"   },
+    { name: "מָעָה",     n: 24,  color: "var(--maah)"    },
+    { name: "פּוּנְדְּיוֹן", n: 48,  color: "var(--pundyon)" },
+    { name: "אִיסָר",    n: 96,  color: "var(--issar)"   },
+    { name: "פְּרוּטָה",  n: 768, color: "var(--perutah)" },
+  ];
+
+  // Build the divided-bar background: a solid coin colour overlaid with evenly
+  // spaced divider lines. The divider width is capped at 2px but shrinks
+  // proportionally once the segments get too thin for a 2px gap — so a bar of
+  // 768 perutot reads as a fine, dense band rather than mostly gaps.
+  function barBackground(n, color) {
+    if (n === 1) return color; // sela is a single, undivided unit
+    const seg = `(100% / ${n})`;
+    const divider = `min(2px, calc(${seg} * 0.14))`;
+    const stripe =
+      `repeating-linear-gradient(90deg,` +
+        `transparent 0,` +
+        `transparent calc(${seg} - ${divider}),` +
+        `var(--divider) calc(${seg} - ${divider}),` +
+        `var(--divider) calc(${seg}))`;
+    return `${stripe}, ${color}`;
+  }
+
+  const host = document.getElementById("rows");
+  for (const c of coins) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const name = document.createElement("p");
+    name.className = "row-name";
+    name.textContent = c.name;
+
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.background = barBackground(c.n, c.color);
+    bar.setAttribute("role", "img");
+    bar.setAttribute("aria-label", `${c.name}: ${c.n} בסלע`);
+
+    row.appendChild(name);
+    row.appendChild(bar);
+    host.appendChild(row);
+  }
+</script>
+</body>
+</html>
